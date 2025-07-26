@@ -206,11 +206,9 @@ export class CalendarService {
         paramIndex++;
       }
 
-      // Add ordering and pagination
       query += ` ORDER BY start_date ASC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
       queryParams.push(limit, offset);
 
-      // Get total count
       let countQuery = query.replace(/SELECT .* FROM/, 'SELECT COUNT(*) FROM')
                            .replace(/ORDER BY .* LIMIT .* OFFSET .*/, '');
       const countParams = queryParams.slice(0, -2); // Remove limit and offset
@@ -221,7 +219,7 @@ export class CalendarService {
       ]);
 
       const events: CalendarEventResponse[] = eventsResult.rows.map(this.mapDatabaseEventToResponse);
-      const total = parseInt(countResult.rows[0].count);
+      const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count, 10) : 0;
 
       return {
         events,
@@ -619,25 +617,35 @@ export class CalendarService {
     };
   }
 
-  private static mapDatabaseEventToResponse(dbEvent: any): CalendarEventResponse {
-    return {
-      id: dbEvent.id,
-      googleEventId: dbEvent.google_event_id,
-      title: dbEvent.title,
-      description: dbEvent.description,
-      startDate: dbEvent.start_date,
-      endDate: dbEvent.end_date,
-      location: dbEvent.location,
-      attendees: dbEvent.attendees ? JSON.parse(dbEvent.attendees) : [],
-      isAllDay: dbEvent.is_all_day,
-      timezone: dbEvent.timezone,
-      status: dbEvent.status,
-      source: dbEvent.source,
-      createdAt: dbEvent.created_at,
-      updatedAt: dbEvent.updated_at,
-      lastModified: dbEvent.last_modified
-    };
-  }
+ private static mapDatabaseEventToResponse(dbEvent: any): CalendarEventResponse {
+  return {
+    id: dbEvent.id,
+    googleEventId: dbEvent.google_event_id,
+    title: dbEvent.title,
+    description: dbEvent.description,
+    startDate: dbEvent.start_date,
+    endDate: dbEvent.end_date,
+    location: dbEvent.location,
+    attendees: (() => {
+      try {
+        if (!dbEvent.attendees) return [];
+        return typeof dbEvent.attendees === 'string'
+          ? JSON.parse(dbEvent.attendees)
+          : dbEvent.attendees;
+      } catch {
+        return [];
+      }
+    })(),
+    isAllDay: dbEvent.is_all_day,
+    timezone: dbEvent.timezone,
+    status: dbEvent.status,
+    source: dbEvent.source,
+    createdAt: dbEvent.created_at,
+    updatedAt: dbEvent.updated_at,
+    lastModified: dbEvent.last_modified
+  };
+}
+
 
   static getMetrics(): CalendarServiceMetrics {
     return { ...this.metrics };
@@ -978,7 +986,7 @@ export class CalendarService {
           ELSE COALESCE(sync_state.sync_error_count, 0) + 1 
         END,
         updated_at = CURRENT_TIMESTAMP
-    `, [userId, nextSyncToken, success, success, error, error ? 1 : 0]);
+    `, [userId, nextSyncToken, new Date(), success, error, error ? 1 : 0]);
   }
 
   // Webhook handling

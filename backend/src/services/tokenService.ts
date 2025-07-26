@@ -6,6 +6,9 @@ import { db } from '../config/database';
 import { JwtPayload, User } from '../types';
 import { InternalServerError, UnauthorizedError } from '../middleware/errorHandler';
 
+const ALGORITHM = 'aes-256-cbc';
+const IV_LENGTH = 16;
+
 export interface GoogleTokens {
   access_token: string;
   refresh_token?: string;
@@ -29,39 +32,30 @@ export class TokenService {
     .digest();
 
   static encrypt(text: string): string {
-    try {
-      const iv = crypto.randomBytes(this.IV_LENGTH);
-      const cipher = crypto.createCipher('aes-256-cbc', this.ENCRYPTION_KEY);
-      
-      let encrypted = cipher.update(text, 'utf8', 'hex');
-      encrypted += cipher.final('hex');
-      
-      return `${iv.toString('hex')}:${encrypted}`;
-    } catch (error) {
-      console.error('Token encryption failed:', error);
-      throw new InternalServerError('Failed to encrypt token');
-    }
-  }
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const cipher = crypto.createCipheriv(
+    ALGORITHM,
+    Buffer.from(process.env.ENCRYPTION_KEY!, 'hex'),
+    iv
+  );
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return iv.toString('hex') + ':' + encrypted;
+}
 
-  static decrypt(encryptedText: string): string {
-    try {
-      const parts = encryptedText.split(':');
-      if (parts.length !== 2) {
-        throw new Error('Invalid encrypted token format');
-      }
 
-      const [ivHex, encrypted] = parts;
-      const decipher = crypto.createDecipher('aes-256-cbc', this.ENCRYPTION_KEY);
-
-      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-      decrypted += decipher.final('utf8');
-
-      return decrypted;
-    } catch (error) {
-      console.error('Token decryption failed:', error);
-      throw new InternalServerError('Failed to decrypt token');
-    }
-  }
+  static decrypt(encrypted: string): string {
+  const [ivHex, encryptedText] = encrypted.split(':');
+  const iv = Buffer.from(ivHex, 'hex');
+  const decipher = crypto.createDecipheriv(
+    ALGORITHM,
+    Buffer.from(process.env.ENCRYPTION_KEY!, 'hex'),
+    iv
+  );
+  let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
 
   static generateJWT(payload: JwtPayload): string {
     try {

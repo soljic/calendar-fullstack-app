@@ -8,7 +8,7 @@ import {
   autoRefreshTokens
 } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
-
+import { createEventSchema } from '../validation/calendarValidation';
 const router = Router();
 
 const calendarRateLimit = rateLimit({
@@ -192,7 +192,7 @@ router.get(
 router.post(
   '/events',
   calendarRateLimit,
-  validateRequest(eventCreateSchema),
+  validateRequest({ body: createEventSchema }),
   CalendarController.createEvent
 );
 
@@ -274,7 +274,7 @@ router.post(
 router.get(
   '/metrics',
   calendarRateLimit,
-  CalendarController.getMetrics
+  CalendarController.getMetrics 
 );
 
 /**
