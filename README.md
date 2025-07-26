@@ -5,7 +5,7 @@ Fullstack JavaScript application using React and Express with PostgreSQL for Goo
 ## Project Structure
 
 - `/backend` - Express.js server with PostgreSQL
-- `/frontend` - React application with MobX state management
+- `/frontend` - React application
 
 ## Setup Instructions
 
