@@ -24,8 +24,9 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "express", "express-session"]
   },
-  "include": ["src/**/*", "src/types/express.d.ts"],
+  "include": ["src/**/*", "src/types/express.d.ts", "src/types/session.d.ts"],
   "exclude": ["node_modules", "dist", "tests"]
 }

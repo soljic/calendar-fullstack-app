@@ -55,6 +55,13 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
+  "ts-node": {
+    "files": true,
+    "transpileOnly": false,
+    "compilerOptions": {
+      "typeRoots": ["./node_modules/@types", "./src/types"]
+    }
+  },
   "keywords": [
     "calendar",
     "express",

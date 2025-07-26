@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import session from 'express-session';
+const session = require('express-session');
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import { env, isDevelopment } from './config/environment';

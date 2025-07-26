@@ -1,14 +1,13 @@
 import { Router } from 'express';
 import authRoutes from './auth';
-import userRoutes from './users';
-import calendarRoutes from './calendars';
-import eventRoutes from './events';
+import calendarRoutes, { webhookRouter } from './calendar';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
-router.use('/users', userRoutes);
-router.use('/calendars', calendarRoutes);
-router.use('/events', eventRoutes);
+router.use('/calendar', calendarRoutes);
+
+// Webhook route without authentication (must be before main calendar routes)
+router.use('/calendar', webhookRouter);
 
 export default router;

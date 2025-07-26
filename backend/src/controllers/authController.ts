@@ -22,7 +22,7 @@ export class AuthController {
 
       console.log('Initiating Google OAuth flow with state:', state);
 
-      req.session.oauthState = state;
+      (req.session as any).oauthState = state;
 
       passport.authenticate('google', {
         scope: [
@@ -49,7 +49,7 @@ export class AuthController {
   ): Promise<void> {
     try {
       const state = req.query.state as string;
-      const sessionState = req.session.oauthState;
+      const sessionState = (req.session as any).oauthState;
 
       if (!state || !sessionState || state !== sessionState) {
         console.warn('OAuth state mismatch or missing');
@@ -62,7 +62,7 @@ export class AuthController {
         return next(new BadRequestError('Invalid or expired OAuth state'));
       }
 
-      delete req.session.oauthState;
+      delete (req.session as any).oauthState;
 
       passport.authenticate('google', { session: false }, async (err, user: User) => {
         try {
